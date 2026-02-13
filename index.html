@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duitku - Expense Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fa-solid fa-wallet"></i>
+                <h1>Duitku</h1>
+            </div>
+            <div class="total-month">
+                <span class="label">Bulan Ini</span>
+                <span class="amount" id="monthTotal">Rp 0</span>
+            </div>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <i class="fa-solid fa-calendar-day"></i>
+                <div>
+                    <span class="stat-label">Hari Ini</span>
+                    <span class="stat-value" id="todayTotal">Rp 0</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fa-solid fa-calendar-week"></i>
+                <div>
+                    <span class="stat-label">Minggu Ini</span>
+                    <span class="stat-value" id="weekTotal">Rp 0</span>
+                </div>
+            </div>
+            <div class="stat-card success">
+                <i class="fa-solid fa-coins"></i>
+                <div>
+                    <span class="stat-label">Tabungan</span>
+                    <span class="stat-value" id="savingsTotal">Rp 0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="budget-card">
+            <div class="budget-header">
+                <span>Budget Bulanan</span>
+                <div class="budget-actions">
+                    <button onclick="openBudgetModal()" class="btn-icon" title="Atur Budget">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                    <button onclick="openResetModal()" class="btn-icon btn-reset" title="Reset Data">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress" id="budgetProgress"></div>
+            </div>
+            <div class="budget-info">
+                <span id="budgetPercent">0%</span>
+                <span id="budgetText">dari Rp 0</span>
+            </div>
+        </div>
+
+        <div class="card savings-card">
+            <h2>💰 Tabungan</h2>
+            <form id="savingsForm">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Jumlah</label>
+                        <div class="input-wrapper">
+                            <span class="prefix">Rp</span>
+                            <input type="number" id="savingsAmount" placeholder="0" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Keterangan</label>
+                        <input type="text" id="savingsNote" placeholder="Cth: Gaji bulanan" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-success">
+                    <i class="fa-solid fa-plus"></i>
+                    Tambah Tabungan
+                </button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Tambah Pengeluaran</h2>
+            <form id="expenseForm">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Jumlah</label>
+                        <div class="input-wrapper">
+                            <span class="prefix">Rp</span>
+                            <input type="number" id="amount" placeholder="0" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Kategori</label>
+                        <select id="category" required>
+                            <option value="">Pilih</option>
+                            <option value="food">🍜 Makan</option>
+                            <option value="transport">🚗 Transport</option>
+                            <option value="shopping">🛒 Belanja</option>
+                            <option value="bills">💳 Tagihan</option>
+                            <option value="health">💊 Kesehatan</option>
+                            <option value="fun">🎮 Hiburan</option>
+                            <option value="beauty">💄 Skincare & Makeup</option>
+                            <option value="other">📦 Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Keterangan (opsional)</label>
+                    <input type="text" id="note" placeholder="Cth: Makan siang">
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-plus"></i>
+                    Tambah Pengeluaran
+                </button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Per Kategori</h2>
+            <div id="categoryList" class="category-list">
+                <p class="empty">Belum ada data bulan ini</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <h2>Riwayat</h2>
+                <div class="actions">
+                    <button onclick="toggleFilter()" class="btn-icon" title="Filter">
+                        <i class="fa-solid fa-filter"></i>
+                    </button>
+                    <button onclick="exportCSV()" class="btn-icon" title="Export">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="filterPanel" class="filter" style="display:none">
+                <select id="filterPeriod" onchange="applyFilter()">
+                    <option value="all">Semua</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="week">Minggu Ini</option>
+                    <option value="month">Bulan Ini</option>
+                </select>
+                <select id="filterCategory" onchange="applyFilter()">
+                    <option value="all">Semua Kategori</option>
+                    <option value="food">🍜 Makan</option>
+                    <option value="transport">🚗 Transport</option>
+                    <option value="shopping">🛒 Belanja</option>
+                    <option value="bills">💳 Tagihan</option>
+                    <option value="health">💊 Kesehatan</option>
+                    <option value="fun">🎮 Hiburan</option>
+                    <option value="beauty">💄 Skincare & Makeup</option>
+                    <option value="other">📦 Lainnya</option>
+                </select>
+            </div>
+            <div id="expenseList" class="expense-list"></div>
+        </div>
+    </div>
+
+    <div id="budgetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Atur Budget</h3>
+                <button onclick="closeBudgetModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <label>Budget Bulanan</label>
+                <div class="input-wrapper">
+                    <span class="prefix">Rp</span>
+                    <input type="number" id="budgetInput" placeholder="3000000">
+                </div>
+                <p class="hint">💡 Alert saat pengeluaran > 80%</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeBudgetModal()" class="btn-secondary">Batal</button>
+                <button onclick="saveBudget()" class="btn-primary">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Pengeluaran</h3>
+                <button onclick="closeEditModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <label>Jumlah</label>
+                <div class="input-wrapper">
+                    <span class="prefix">Rp</span>
+                    <input type="number" id="editAmount">
+                </div>
+                <label>Kategori</label>
+                <select id="editCategory">
+                    <option value="food">🍜 Makan</option>
+                    <option value="transport">🚗 Transport</option>
+                    <option value="shopping">🛒 Belanja</option>
+                    <option value="bills">💳 Tagihan</option>
+                    <option value="health">💊 Kesehatan</option>
+                    <option value="fun">🎮 Hiburan</option>
+                    <option value="beauty">💄 Skincare & Makeup</option>
+                    <option value="other">📦 Lainnya</option>
+                </select>
+                <label>Keterangan</label>
+                <input type="text" id="editNote">
+            </div>
+            <div class="modal-footer">
+                <button onclick="deleteExpense()" class="btn-danger">
+                    <i class="fa-solid fa-trash"></i> Hapus
+                </button>
+                <button onclick="saveEdit()" class="btn-primary">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚠️ Reset Semua Data</h3>
+                <button onclick="closeResetModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="warning-text">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Semua data akan dihapus permanen!
+                </p>
+                <p class="hint">Termasuk: pengeluaran, tabungan, dan budget.</p>
+                <p class="hint"><strong>Tidak bisa dibatalkan!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeResetModal()" class="btn-secondary">Batal</button>
+                <button onclick="confirmReset()" class="btn-danger">
+                    <i class="fa-solid fa-trash-can"></i> Ya, Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

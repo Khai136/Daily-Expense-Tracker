@@ -1,0 +1,61 @@
+
+/* New Features Styling */
+.budget-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-reset {
+    color: #ef4444 !important;
+}
+
+.btn-reset:hover {
+    background: #fee2e2 !important;
+}
+
+.stat-card.success i {
+    color: #10b981;
+}
+
+.savings-card {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 2px solid #10b981;
+}
+
+.savings-card h2 {
+    color: #059669;
+}
+
+.btn-success {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+}
+
+.warning-text {
+    color: #ef4444;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.warning-text i {
+    font-size: 1.5rem;
+}
