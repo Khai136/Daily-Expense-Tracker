@@ -66,7 +66,7 @@
         </div>
 
         <div class="card savings-card">
-            <h2>💰 Tabungan</h2>
+            <h2>💰 Tambah Tabungan</h2>
             <form id="savingsForm">
                 <div class="form-row">
                     <div class="input-group">
@@ -78,18 +78,17 @@
                     </div>
                     <div class="input-group">
                         <label>Keterangan</label>
-                        <input type="text" id="savingsNote" placeholder="Cth: Gaji bulanan" required>
+                        <input type="text" id="savingsNote" placeholder="Cth: Gaji" required>
                     </div>
                 </div>
                 <button type="submit" class="btn-success">
-                    <i class="fa-solid fa-plus"></i>
-                    Tambah Tabungan
+                    <i class="fa-solid fa-plus"></i> Tambah Tabungan
                 </button>
             </form>
         </div>
 
         <div class="card">
-            <h2>Tambah Pengeluaran</h2>
+            <h2>💸 Tambah Pengeluaran</h2>
             <form id="expenseForm">
                 <div class="form-row">
                     <div class="input-group">
@@ -109,7 +108,7 @@
                             <option value="bills">💳 Tagihan</option>
                             <option value="health">💊 Kesehatan</option>
                             <option value="fun">🎮 Hiburan</option>
-                            <option value="beauty">💄 Skincare & Makeup</option>
+                            <option value="beauty">💄 Skincare</option>
                             <option value="other">📦 Lainnya</option>
                         </select>
                     </div>
@@ -119,8 +118,7 @@
                     <input type="text" id="note" placeholder="Cth: Makan siang">
                 </div>
                 <button type="submit" class="btn-primary">
-                    <i class="fa-solid fa-plus"></i>
-                    Tambah Pengeluaran
+                    <i class="fa-solid fa-plus"></i> Tambah Pengeluaran
                 </button>
             </form>
         </div>
@@ -136,17 +134,13 @@
             <div class="section-header">
                 <h2>Riwayat</h2>
                 <div class="actions">
-                    <button onclick="toggleFilter()" class="btn-icon" title="Filter">
-                        <i class="fa-solid fa-filter"></i>
-                    </button>
-                    <button onclick="exportCSV()" class="btn-icon" title="Export">
-                        <i class="fa-solid fa-download"></i>
-                    </button>
+                    <button onclick="toggleFilter()" class="btn-icon"><i class="fa-solid fa-filter"></i></button>
+                    <button onclick="exportCSV()" class="btn-icon"><i class="fa-solid fa-download"></i></button>
                 </div>
             </div>
             <div id="filterPanel" class="filter" style="display:none">
                 <select id="filterPeriod" onchange="applyFilter()">
-                    <option value="all">Semua</option>
+                    <option value="all">Semua Waktu</option>
                     <option value="today">Hari Ini</option>
                     <option value="week">Minggu Ini</option>
                     <option value="month">Bulan Ini</option>
@@ -159,7 +153,7 @@
                     <option value="bills">💳 Tagihan</option>
                     <option value="health">💊 Kesehatan</option>
                     <option value="fun">🎮 Hiburan</option>
-                    <option value="beauty">💄 Skincare & Makeup</option>
+                    <option value="beauty">💄 Skincare</option>
                     <option value="other">📦 Lainnya</option>
                 </select>
             </div>
@@ -177,12 +171,10 @@
                 <label>Budget Bulanan</label>
                 <div class="input-wrapper">
                     <span class="prefix">Rp</span>
-                    <input type="number" id="budgetInput" placeholder="3000000">
+                    <input type="number" id="budgetInput">
                 </div>
-                <p class="hint">💡 Alert saat pengeluaran > 80%</p>
             </div>
             <div class="modal-footer">
-                <button onclick="closeBudgetModal()" class="btn-secondary">Batal</button>
                 <button onclick="saveBudget()" class="btn-primary">Simpan</button>
             </div>
         </div>
@@ -196,10 +188,7 @@
             </div>
             <div class="modal-body">
                 <label>Jumlah</label>
-                <div class="input-wrapper">
-                    <span class="prefix">Rp</span>
-                    <input type="number" id="editAmount">
-                </div>
+                <input type="number" id="editAmount">
                 <label>Kategori</label>
                 <select id="editCategory">
                     <option value="food">🍜 Makan</option>
@@ -208,16 +197,14 @@
                     <option value="bills">💳 Tagihan</option>
                     <option value="health">💊 Kesehatan</option>
                     <option value="fun">🎮 Hiburan</option>
-                    <option value="beauty">💄 Skincare & Makeup</option>
+                    <option value="beauty">💄 Skincare</option>
                     <option value="other">📦 Lainnya</option>
                 </select>
                 <label>Keterangan</label>
                 <input type="text" id="editNote">
             </div>
             <div class="modal-footer">
-                <button onclick="deleteExpense()" class="btn-danger">
-                    <i class="fa-solid fa-trash"></i> Hapus
-                </button>
+                <button onclick="deleteExpense()" class="btn-danger">Hapus</button>
                 <button onclick="saveEdit()" class="btn-primary">Simpan</button>
             </div>
         </div>
@@ -226,22 +213,14 @@
     <div id="resetModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>⚠️ Reset Semua Data</h3>
+                <h3>⚠️ Reset Data</h3>
                 <button onclick="closeResetModal()" class="btn-close">×</button>
             </div>
             <div class="modal-body">
-                <p class="warning-text">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    Semua data akan dihapus permanen!
-                </p>
-                <p class="hint">Termasuk: pengeluaran, tabungan, dan budget.</p>
-                <p class="hint"><strong>Tidak bisa dibatalkan!</strong></p>
+                <p>Hapus semua data permanen?</p>
             </div>
             <div class="modal-footer">
-                <button onclick="closeResetModal()" class="btn-secondary">Batal</button>
-                <button onclick="confirmReset()" class="btn-danger">
-                    <i class="fa-solid fa-trash-can"></i> Ya, Reset
-                </button>
+                <button onclick="confirmReset()" class="btn-danger">Ya, Reset</button>
             </div>
         </div>
     </div>
