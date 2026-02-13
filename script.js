@@ -10,7 +10,7 @@ const cats = {
     bills: { icon: '💳', name: 'Tagihan', color: '#f59e0b' },
     health: { icon: '💊', name: 'Kesehatan', color: '#10b981' },
     fun: { icon: '🎮', name: 'Hiburan', color: '#ec4899' },
-    beauty: { icon: '💄', name: 'Skincare', color: '#f472b6' },
+    beauty: { icon: '💄', name: 'Skincare & Make Up', color: '#f472b6' },
     other: { icon: '📦', name: 'Lainnya', color: '#6b7280' }
 };
 
