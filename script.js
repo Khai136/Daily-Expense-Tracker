@@ -1,16 +1,7 @@
-// ==========================================
-// DUITKU MEGA - FULL ENGINE (FIXED & SYNCED)
-// ==========================================
-
 let expenses = [];
-let goals = [];
-let recurring = [];
-let wallets = { cash: 0, bank: 0, ewallet: 0, credit: 0 };
-let currentWallet = 'cash';
+let savings = [];
 let budget = 0;
-let userLevel = 1;
-let userXP = 0;
-let soundEnabled = true;
+let editId = null;
 
 const cats = {
     food: { icon: '🍜', name: 'Makan', color: '#ef4444' },
@@ -19,189 +10,375 @@ const cats = {
     bills: { icon: '💳', name: 'Tagihan', color: '#f59e0b' },
     health: { icon: '💊', name: 'Kesehatan', color: '#10b981' },
     fun: { icon: '🎮', name: 'Hiburan', color: '#ec4899' },
+    beauty: { icon: '💄', name: 'Skincare & Makeup', color: '#f472b6' },
     other: { icon: '📦', name: 'Lainnya', color: '#6b7280' }
 };
 
-// 1. INIT & LOAD DATA
 document.addEventListener('DOMContentLoaded', () => {
-    loadData();
-    initChart();
-    render();
-    processRecurring(); // Fitur auto-debet bulanan
-    
+    load();
     document.getElementById('expenseForm').addEventListener('submit', addExpense);
+    document.getElementById('savingsForm').addEventListener('submit', addSavings);
+    render();
 });
 
-function loadData() {
-    expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-    goals = JSON.parse(localStorage.getItem('goals') || '[]');
-    recurring = JSON.parse(localStorage.getItem('recurring') || '[]');
-    wallets = JSON.parse(localStorage.getItem('wallets') || '{"cash":0,"bank":0,"ewallet":0,"credit":0}');
-    budget = parseFloat(localStorage.getItem('budget') || '0');
-    currentWallet = localStorage.getItem('currentWallet') || 'cash';
-    userLevel = parseInt(localStorage.getItem('level') || '1');
-    userXP = parseInt(localStorage.getItem('xp') || '0');
-    
-    document.getElementById('currentWallet').value = currentWallet;
+function load() {
+    const e = localStorage.getItem('expenses');
+    const s = localStorage.getItem('savings');
+    const b = localStorage.getItem('budget');
+    if (e) expenses = JSON.parse(e);
+    if (s) savings = JSON.parse(s);
+    if (b) budget = parseFloat(b);
 }
 
 function save() {
     localStorage.setItem('expenses', JSON.stringify(expenses));
-    localStorage.setItem('wallets', JSON.stringify(wallets));
+    localStorage.setItem('savings', JSON.stringify(savings));
     localStorage.setItem('budget', budget);
-    localStorage.setItem('currentWallet', currentWallet);
-    localStorage.setItem('level', userLevel);
-    localStorage.setItem('xp', userXP);
 }
 
-// 2. CORE FUNCTIONS
 function addExpense(e) {
     e.preventDefault();
     const amt = parseFloat(document.getElementById('amount').value);
     const cat = document.getElementById('category').value;
     const note = document.getElementById('note').value;
     
-    if (!amt) return notify('Isi jumlahnya!', 'danger');
-
-    const exp = {
+    if (!amt || amt <= 0 || !cat) {
+        notify('Isi semua field!', 'danger');
+        return;
+    }
+    
+    expenses.unshift({
         id: Date.now(),
         amount: amt,
         category: cat,
         note: note || cats[cat].name,
-        wallet: currentWallet,
         date: new Date().toISOString()
-    };
-
-    expenses.unshift(exp);
-    addXP(10); // Fitur Leveling
+    });
+    
     save();
     render();
     e.target.reset();
-    notify('✅ Berhasil dicatat!', 'success');
-    playSound('success');
+    notify('✅ Pengeluaran ditambahkan!', 'success');
 }
 
-// 3. SYSTEM XP & LEVELING
-function addXP(amount) {
-    userXP += amount;
-    if (userXP >= userLevel * 100) {
-        userXP = 0;
-        userLevel++;
-        notify(`🎉 LEVEL UP! Sekarang Level ${userLevel}`, 'success');
-        playSound('levelup');
+function addSavings(e) {
+    e.preventDefault();
+    const amt = parseFloat(document.getElementById('savingsAmount').value);
+    const note = document.getElementById('savingsNote').value;
+    
+    if (!amt || amt <= 0 || !note) {
+        notify('Isi semua field!', 'danger');
+        return;
     }
-    document.getElementById('userLevel').textContent = userLevel;
-    document.getElementById('xpFill').style.width = (userXP / (userLevel * 100) * 100) + '%';
+    
+    savings.unshift({
+        id: Date.now(),
+        amount: amt,
+        note: note,
+        date: new Date().toISOString()
+    });
+    
+    save();
+    render();
+    e.target.reset();
+    notify('✅ Tabungan ditambahkan!', 'success');
 }
 
-// 4. RENDERING ENGINE
 function render() {
-    updateWalletBalance();
-    updateBudgetProgress();
     updateStats();
+    updateBudget();
+    updateCategories();
     updateList();
-    updateChart();
-}
-
-function updateWalletBalance() {
-    const totalSpent = expenses
-        .filter(e => e.wallet === currentWallet)
-        .reduce((sum, e) => sum + e.amount, 0);
-    
-    // Asumsi saldo awal (bisa kamu tambah fitur edit saldo nanti)
-    const initialBalance = wallets[currentWallet] || 0;
-    const balance = initialBalance - totalSpent;
-    
-    const el = document.getElementById('walletBalance');
-    el.textContent = fmt(balance);
-    el.style.color = balance < 0 ? 'var(--danger)' : 'var(--primary)';
-}
-
-function updateBudgetProgress() {
-    const monthTotal = expenses
-        .filter(e => isThisMonth(e.date))
-        .reduce((s, e) => s + e.amount, 0);
-    
-    const pct = budget > 0 ? Math.min((monthTotal / budget) * 100, 100) : 0;
-    const bar = document.getElementById('budgetProgress');
-    
-    bar.style.width = pct + '%';
-    bar.style.background = pct > 85 ? 'var(--danger)' : 'var(--primary)';
-    
-    document.getElementById('budgetPercent').textContent = Math.round(pct) + '%';
-    document.getElementById('budgetText').textContent = `dari ${fmt(budget)}`;
 }
 
 function updateStats() {
-    const today = new Date().toDateString();
-    const todayTotal = expenses
-        .filter(e => new Date(e.date).toDateString() === today)
-        .reduce((s, e) => s + e.amount, 0);
+    const today = getToday();
+    const week = getWeek();
+    const month = getMonth();
+    const totalSavings = savings.reduce((sum, s) => sum + s.amount, 0);
     
-    document.getElementById('todayTotal').textContent = fmt(todayTotal);
+    document.getElementById('todayTotal').textContent = fmt(today);
+    document.getElementById('weekTotal').textContent = fmt(week);
+    document.getElementById('monthTotal').textContent = fmt(month);
+    document.getElementById('savingsTotal').textContent = fmt(totalSavings);
 }
 
-function updateList() {
-    const listContainer = document.getElementById('expenseList');
-    if (expenses.length === 0) {
-        listContainer.innerHTML = '<p style="text-align:center; color:var(--text-muted)">Belum ada catatan hari ini.</p>';
-        return;
-    }
-
-    listContainer.innerHTML = expenses.slice(0, 10).map(e => `
-        <div class="glow-card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:15px">
-            <div style="display:flex; align-items:center; gap:12px">
-                <div style="font-size:1.5rem">${cats[e.category].icon}</div>
-                <div>
-                    <div style="font-weight:700">${e.note}</div>
-                    <div style="font-size:0.75rem; color:var(--text-muted)">${fmtDate(e.date)} • ${e.wallet}</div>
-                </div>
-            </div>
-            <div style="color:var(--danger); font-weight:800">-${fmt(e.amount)}</div>
-        </div>
-    `).join('');
-}
-
-// 5. CHART & ANALYTICS
-function initChart() {
-    const ctx = document.getElementById('expenseChart').getContext('2d');
-    currentChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: [],
-            datasets: [{ data: [], backgroundColor: [] }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom' } }
+function updateBudget() {
+    const month = getMonth();
+    const pct = budget > 0 ? Math.min((month / budget) * 100, 100) : 0;
+    
+    const bar = document.getElementById('budgetProgress');
+    bar.style.width = pct + '%';
+    bar.className = pct >= 80 ? 'progress warning' : 'progress';
+    
+    document.getElementById('budgetPercent').textContent = pct.toFixed(0) + '%';
+    document.getElementById('budgetText').textContent = 'dari ' + fmt(budget);
+    
+    if (pct >= 80 && pct < 100) {
+        const last = localStorage.getItem('lastWarn');
+        const now = new Date().toDateString();
+        if (last !== now) {
+            notify(`⚠️ Sudah ${pct.toFixed(0)}%!`, 'warning');
+            localStorage.setItem('lastWarn', now);
         }
-    });
+    }
 }
 
-function updateChart() {
+function updateCategories() {
     const totals = {};
-    expenses.filter(e => isThisMonth(e.date)).forEach(e => {
+    const monthTotal = getMonth();
+    
+    expenses.filter(e => isMonth(e.date)).forEach(e => {
         totals[e.category] = (totals[e.category] || 0) + e.amount;
     });
-
-    currentChart.data.labels = Object.keys(totals).map(k => cats[k].name);
-    currentChart.data.datasets[0].data = Object.values(totals);
-    currentChart.data.datasets[0].backgroundColor = Object.keys(totals).map(k => cats[k].color);
-    currentChart.update();
+    
+    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    const html = sorted.map(([cat, amt]) => {
+        const pct = monthTotal > 0 ? (amt / monthTotal) * 100 : 0;
+        const c = cats[cat];
+        return `
+            <div class="category-item">
+                <div class="icon">${c.icon}</div>
+                <div class="info">
+                    <div class="name">${c.name}</div>
+                    <div class="bar">
+                        <div class="fill" style="width:${pct}%; background:${c.color}"></div>
+                    </div>
+                </div>
+                <div class="amount">${fmt(amt)}</div>
+            </div>
+        `;
+    }).join('') || '<p class="empty">Belum ada data bulan ini</p>';
+    
+    document.getElementById('categoryList').innerHTML = html;
 }
 
-// 6. UTILITIES
-function fmt(n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
-function fmtDate(d) { return new Date(d).toLocaleDateString('id-ID', { day:'numeric', month:'short' }); }
-function isThisMonth(d) { return new Date(d).getMonth() === new Date().getMonth(); }
+function updateList(filtered = null) {
+    const list = filtered || expenses;
+    if (!list.length) {
+        document.getElementById('expenseList').innerHTML = `
+            <div class="empty-state">
+                <i class="fa-solid fa-inbox"></i>
+                <p>Belum ada pengeluaran</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const grouped = {};
+    list.forEach(e => {
+        const d = fmtDate(e.date);
+        if (!grouped[d]) grouped[d] = [];
+        grouped[d].push(e);
+    });
+    
+    const html = Object.entries(grouped).map(([date, items]) => {
+        const total = items.reduce((s, i) => s + i.amount, 0);
+        return `
+            <div class="expense-group">
+                <div class="date-header">
+                    <span>${date}</span>
+                    <span>${fmt(total)}</span>
+                </div>
+                ${items.map(e => `
+                    <div class="expense-item" onclick="openEdit(${e.id})">
+                        <div class="left">
+                            <div class="icon">${cats[e.category].icon}</div>
+                            <div>
+                                <div class="title">${e.note}</div>
+                                <div class="meta">${cats[e.category].name} • ${fmtTime(e.date)}</div>
+                            </div>
+                        </div>
+                        <div class="amount">-${fmt(e.amount)}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('expenseList').innerHTML = html;
+}
 
-function switchWallet() {
-    currentWallet = document.getElementById('currentWallet').value;
+function getToday() {
+    const today = new Date().toDateString();
+    return expenses.filter(e => new Date(e.date).toDateString() === today)
+        .reduce((s, e) => s + e.amount, 0);
+}
+
+function getWeek() {
+    const week = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return expenses.filter(e => new Date(e.date) >= week)
+        .reduce((s, e) => s + e.amount, 0);
+}
+
+function getMonth() {
+    return expenses.filter(e => isMonth(e.date))
+        .reduce((s, e) => s + e.amount, 0);
+}
+
+function isMonth(d) {
+    const date = new Date(d);
+    const now = new Date();
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+}
+
+function fmt(n) {
+    return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+
+function fmtDate(d) {
+    const date = new Date(d);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) return 'Hari Ini';
+    if (date.toDateString() === yesterday.toDateString()) return 'Kemarin';
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function fmtTime(d) {
+    return new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+function openBudgetModal() {
+    document.getElementById('budgetInput').value = budget || '';
+    document.getElementById('budgetModal').classList.add('show');
+}
+
+function closeBudgetModal() {
+    document.getElementById('budgetModal').classList.remove('show');
+}
+
+function saveBudget() {
+    const val = parseFloat(document.getElementById('budgetInput').value);
+    if (isNaN(val) || val < 0) {
+        notify('Budget tidak valid!', 'danger');
+        return;
+    }
+    budget = val;
     save();
     render();
+    closeBudgetModal();
+    notify('✅ Budget disimpan!', 'success');
 }
 
-function notify(msg, type) {
+function openEdit(id) {
+    const exp = expenses.find(e => e.id === id);
+    if (!exp) return;
+    
+    editId = id;
+    document.getElementById('editAmount').value = exp.amount;
+    document.getElementById('editCategory').value = exp.category;
+    document.getElementById('editNote').value = exp.note;
+    document.getElementById('editModal').classList.add('show');
+}
+
+function closeEditModal() {
+    editId = null;
+    document.getElementById('editModal').classList.remove('show');
+}
+
+function saveEdit() {
+    const exp = expenses.find(e => e.id === editId);
+    if (!exp) return;
+    
+    const amt = parseFloat(document.getElementById('editAmount').value);
+    if (isNaN(amt) || amt <= 0) {
+        notify('Jumlah tidak valid!', 'danger');
+        return;
+    }
+    
+    exp.amount = amt;
+    exp.category = document.getElementById('editCategory').value;
+    exp.note = document.getElementById('editNote').value;
+    
+    save();
+    render();
+    closeEditModal();
+    notify('✅ Diupdate!', 'success');
+}
+
+function deleteExpense() {
+    if (!confirm('Hapus pengeluaran ini?')) return;
+    expenses = expenses.filter(e => e.id !== editId);
+    save();
+    render();
+    closeEditModal();
+    notify('✅ Dihapus!', 'success');
+}
+
+function openResetModal() {
+    document.getElementById('resetModal').classList.add('show');
+}
+
+function closeResetModal() {
+    document.getElementById('resetModal').classList.remove('show');
+}
+
+function confirmReset() {
+    if (!confirm('YAKIN ingin menghapus SEMUA data? Aksi ini TIDAK BISA dibatalkan!')) return;
+    
+    expenses = [];
+    savings = [];
+    budget = 0;
+    localStorage.clear();
+    
+    render();
+    closeResetModal();
+    notify('✅ Semua data dihapus!', 'success');
+}
+
+function toggleFilter() {
+    const panel = document.getElementById('filterPanel');
+    panel.style.display = panel.style.display === 'none' ? 'grid' : 'none';
+}
+
+function applyFilter() {
+    const period = document.getElementById('filterPeriod').value;
+    const cat = document.getElementById('filterCategory').value;
+    
+    let filtered = [...expenses];
+    
+    if (period === 'today') {
+        const today = new Date().toDateString();
+        filtered = filtered.filter(e => new Date(e.date).toDateString() === today);
+    } else if (period === 'week') {
+        const week = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        filtered = filtered.filter(e => new Date(e.date) >= week);
+    } else if (period === 'month') {
+        filtered = filtered.filter(e => isMonth(e.date));
+    }
+    
+    if (cat !== 'all') {
+        filtered = filtered.filter(e => e.category === cat);
+    }
+    
+    updateList(filtered);
+}
+
+function exportCSV() {
+    if (!expenses.length) {
+        notify('Belum ada data!', 'warning');
+        return;
+    }
+    
+    let csv = 'Tanggal,Waktu,Kategori,Keterangan,Jumlah\n';
+    expenses.forEach(e => {
+        const d = new Date(e.date);
+        csv += `${d.toLocaleDateString('id-ID')},${d.toLocaleTimeString('id-ID')},${cats[e.category].name},"${e.note}",${e.amount}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `duitku_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    
+    notify('✅ Di-export!', 'success');
+}
+
+function notify(msg, type = 'success') {
     const n = document.createElement('div');
     n.className = `notification ${type}`;
     n.textContent = msg;
@@ -209,27 +386,8 @@ function notify(msg, type) {
     setTimeout(() => n.remove(), 3000);
 }
 
-// 7. RECURRING ENGINE (Auto-input tiap bulan)
-function processRecurring() {
-    const lastCheck = localStorage.getItem('lastRecurringCheck');
-    const now = new Date();
-    if (lastCheck !== now.getMonth().toString()) {
-        recurring.forEach(r => {
-            expenses.unshift({...r, id: Date.now(), date: now.toISOString()});
-        });
-        localStorage.setItem('lastRecurringCheck', now.getMonth().toString());
-        save();
+window.onclick = e => {
+    if (e.target.classList.contains('modal')) {
+        e.target.classList.remove('show');
     }
-}
-
-// SOUND ENGINE
-function playSound(type) {
-    if (!soundEnabled) return;
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.connect(g); g.connect(ctx.destination);
-    osc.frequency.value = type === 'success' ? 880 : 440;
-    g.gain.setValueAtTime(0.1, ctx.currentTime);
-    osc.start(); osc.stop(ctx.currentTime + 0.1);
-}
+};
