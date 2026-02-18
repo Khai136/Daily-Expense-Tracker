@@ -1,63 +1,115 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duitku - Expense Tracker</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="Duitku - Professional Expense Tracker with Charts, Dark Mode, PWA">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <title>Duitku - Mega Expense Tracker</title>
+    <link rel="stylesheet" href="style-mega.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
+    <!-- Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <button onclick="toggleTheme()" class="btn-icon" title="Toggle Theme">
+                <i class="fa-solid fa-moon" id="themeIcon"></i>
+            </button>
+            <button onclick="toggleSound()" class="btn-icon" title="Toggle Sound">
+                <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+            </button>
+            <button onclick="showPinModal()" class="btn-icon" title="Security">
+                <i class="fa-solid fa-lock"></i>
+            </button>
+            <button onclick="showStats()" class="btn-icon" title="Statistics">
+                <i class="fa-solid fa-chart-line"></i>
+            </button>
+        </div>
+    </div>
+
     <div class="container">
-        <header class="header">
+        <!-- Header -->
+        <header class="header glow-card">
             <div class="logo">
-                <i class="fa-solid fa-wallet"></i>
-                <h1>Total pengeluaran</h1>
+                <i class="fa-solid fa-wallet glow-icon"></i>
+                <h1>Duitku <span class="version">MEGA</span></h1>
             </div>
-            <div class="total-month">
-                <span class="label">Bulan Ini</span>
-                <span class="amount" id="monthTotal">Rp 0</span>
+            <div class="wallet-selector">
+                <select id="currentWallet" onchange="switchWallet()">
+                    <option value="cash">💵 Tunai</option>
+                    <option value="bank">🏦 Bank</option>
+                    <option value="ewallet">📱 E-Wallet</option>
+                    <option value="credit">💳 Credit</option>
+                </select>
+                <span class="wallet-balance" id="walletBalance">Rp 0</span>
             </div>
         </header>
 
-        <div class="stats">
-            <div class="stat-card">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card glow-card">
                 <i class="fa-solid fa-calendar-day"></i>
                 <div>
                     <span class="stat-label">Hari Ini</span>
                     <span class="stat-value" id="todayTotal">Rp 0</span>
                 </div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card glow-card">
                 <i class="fa-solid fa-calendar-week"></i>
                 <div>
                     <span class="stat-label">Minggu Ini</span>
                     <span class="stat-value" id="weekTotal">Rp 0</span>
                 </div>
             </div>
-            <div class="stat-card success">
-                <i class="fa-solid fa-coins"></i>
+            <div class="stat-card success glow-card">
+                <i class="fa-solid fa-piggy-bank"></i>
                 <div>
                     <span class="stat-label">Tabungan</span>
                     <span class="stat-value" id="savingsTotal">Rp 0</span>
                 </div>
             </div>
+            <div class="stat-card warning glow-card">
+                <i class="fa-solid fa-trophy"></i>
+                <div>
+                    <span class="stat-label">Level</span>
+                    <span class="stat-value" id="userLevel">1</span>
+                </div>
+            </div>
         </div>
 
-        <div class="budget-card">
+        <!-- Budget -->
+        <div class="budget-card glow-card">
             <div class="budget-header">
                 <span>Budget Bulanan</span>
                 <div class="budget-actions">
-                    <button onclick="openBudgetModal()" class="btn-icon" title="Atur Budget">
-                        <i class="fa-solid fa-gear"></i>
+                    <button onclick="openBudgetModal()" class="btn-icon">
+                        <i class="fa-solid fa-gear spin-hover"></i>
                     </button>
-                    <button onclick="openResetModal()" class="btn-icon btn-reset" title="Reset Data">
+                    <button onclick="openResetModal()" class="btn-icon btn-reset">
                         <i class="fa-solid fa-rotate-right"></i>
                     </button>
                 </div>
             </div>
             <div class="progress-bar">
-                <div class="progress" id="budgetProgress"></div>
+                <div class="progress animated-gradient" id="budgetProgress"></div>
             </div>
             <div class="budget-info">
                 <span id="budgetPercent">0%</span>
@@ -65,30 +117,35 @@
             </div>
         </div>
 
-        <div class="card savings-card">
-            <h2>💰 Tambah Tabungan</h2>
-            <form id="savingsForm">
-                <div class="form-row">
-                    <div class="input-group">
-                        <label>Jumlah</label>
-                        <div class="input-wrapper">
-                            <span class="prefix">Rp</span>
-                            <input type="number" id="savingsAmount" placeholder="0" required>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>Keterangan</label>
-                        <input type="text" id="savingsNote" placeholder="Cth: Gaji" required>
-                    </div>
+        <!-- Charts -->
+        <div class="card glow-card">
+            <div class="section-header">
+                <h2><i class="fa-solid fa-chart-pie"></i> Analytics</h2>
+                <div class="chart-tabs">
+                    <button class="tab-btn active" onclick="switchChart('pie')">Pie</button>
+                    <button class="tab-btn" onclick="switchChart('line')">Trend</button>
+                    <button class="tab-btn" onclick="switchChart('bar')">Bar</button>
                 </div>
-                <button type="submit" class="btn-success">
-                    <i class="fa-solid fa-plus"></i> Tambah Tabungan
-                </button>
-            </form>
+            </div>
+            <div class="chart-container">
+                <canvas id="expenseChart"></canvas>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>💸 Tambah Pengeluaran</h2>
+        <!-- Savings Goals -->
+        <div class="card glow-card">
+            <div class="section-header">
+                <h2><i class="fa-solid fa-bullseye"></i> Savings Goals</h2>
+                <button onclick="addGoal()" class="btn-small">
+                    <i class="fa-solid fa-plus"></i> Add Goal
+                </button>
+            </div>
+            <div id="goalsList" class="goals-list"></div>
+        </div>
+
+        <!-- Quick Add -->
+        <div class="card glow-card">
+            <h2><i class="fa-solid fa-bolt"></i> Quick Add</h2>
             <form id="expenseForm">
                 <div class="form-row">
                     <div class="input-group">
@@ -108,39 +165,77 @@
                             <option value="bills">💳 Tagihan</option>
                             <option value="health">💊 Kesehatan</option>
                             <option value="fun">🎮 Hiburan</option>
-                            <option value="beauty">💄 Skincare & Make Up</option>
+                            <option value="beauty">💄 Beauty</option>
                             <option value="other">📦 Lainnya</option>
                         </select>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label>Keterangan (opsional)</label>
-                    <input type="text" id="note" placeholder="Cth: Makan siang">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Keterangan</label>
+                        <input type="text" id="note" placeholder="Cth: Makan siang">
+                    </div>
+                    <div class="input-group">
+                        <label>Tags (opsional)</label>
+                        <input type="text" id="tags" placeholder="#urgent #subscription">
+                    </div>
                 </div>
-                <button type="submit" class="btn-primary">
-                    <i class="fa-solid fa-plus"></i> Tambah Pengeluaran
+                <div class="form-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="isRecurring">
+                        <span>Recurring (auto setiap bulan)</span>
+                    </label>
+                </div>
+                <button type="submit" class="btn-primary glow-btn">
+                    <i class="fa-solid fa-plus"></i>
+                    Tambah Pengeluaran
                 </button>
             </form>
         </div>
 
-        <div class="card">
-            <h2>Per Kategori</h2>
-            <div id="categoryList" class="category-list">
-                <p class="empty">Belum ada data bulan ini</p>
+        <!-- Recurring Expenses -->
+        <div class="card glow-card">
+            <div class="section-header">
+                <h2><i class="fa-solid fa-repeat"></i> Recurring Expenses</h2>
             </div>
+            <div id="recurringList" class="recurring-list"></div>
         </div>
 
-        <div class="card">
+        <!-- Category Breakdown -->
+        <div class="card glow-card">
+            <h2><i class="fa-solid fa-layer-group"></i> Per Kategori</h2>
+            <div id="categoryList" class="category-list"></div>
+        </div>
+
+        <!-- Search & History -->
+        <div class="card glow-card">
             <div class="section-header">
-                <h2>Riwayat</h2>
+                <h2><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</h2>
                 <div class="actions">
-                    <button onclick="toggleFilter()" class="btn-icon"><i class="fa-solid fa-filter"></i></button>
-                    <button onclick="exportCSV()" class="btn-icon"><i class="fa-solid fa-download"></i></button>
+                    <button onclick="toggleSearch()" class="btn-icon">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                    <button onclick="toggleFilter()" class="btn-icon">
+                        <i class="fa-solid fa-filter"></i>
+                    </button>
+                    <button onclick="exportPDF()" class="btn-icon">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+                    <button onclick="exportCSV()" class="btn-icon">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
                 </div>
             </div>
+            
+            <!-- Search -->
+            <div id="searchPanel" class="search-panel" style="display:none">
+                <input type="text" id="searchInput" placeholder="🔍 Cari pengeluaran..." onkeyup="searchExpenses()">
+            </div>
+
+            <!-- Filter -->
             <div id="filterPanel" class="filter" style="display:none">
                 <select id="filterPeriod" onchange="applyFilter()">
-                    <option value="all">Semua Waktu</option>
+                    <option value="all">Semua</option>
                     <option value="today">Hari Ini</option>
                     <option value="week">Minggu Ini</option>
                     <option value="month">Bulan Ini</option>
@@ -153,16 +248,31 @@
                     <option value="bills">💳 Tagihan</option>
                     <option value="health">💊 Kesehatan</option>
                     <option value="fun">🎮 Hiburan</option>
-                    <option value="beauty">💄 Skincare & Make Up</option>
+                    <option value="beauty">💄 Beauty</option>
                     <option value="other">📦 Lainnya</option>
                 </select>
+                <select id="filterWallet" onchange="applyFilter()">
+                    <option value="all">Semua Wallet</option>
+                    <option value="cash">💵 Tunai</option>
+                    <option value="bank">🏦 Bank</option>
+                    <option value="ewallet">📱 E-Wallet</option>
+                    <option value="credit">💳 Credit</option>
+                </select>
             </div>
+
             <div id="expenseList" class="expense-list"></div>
+        </div>
+
+        <!-- Calendar View -->
+        <div class="card glow-card">
+            <h2><i class="fa-solid fa-calendar"></i> Calendar View</h2>
+            <div id="calendarView" class="calendar-view"></div>
         </div>
     </div>
 
+    <!-- Modals -->
     <div id="budgetModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content glow-card">
             <div class="modal-header">
                 <h3>Atur Budget</h3>
                 <button onclick="closeBudgetModal()" class="btn-close">×</button>
@@ -171,24 +281,29 @@
                 <label>Budget Bulanan</label>
                 <div class="input-wrapper">
                     <span class="prefix">Rp</span>
-                    <input type="number" id="budgetInput">
+                    <input type="number" id="budgetInput" placeholder="3000000">
                 </div>
+                <p class="hint">💡 Alert saat > 80%</p>
             </div>
             <div class="modal-footer">
+                <button onclick="closeBudgetModal()" class="btn-secondary">Batal</button>
                 <button onclick="saveBudget()" class="btn-primary">Simpan</button>
             </div>
         </div>
     </div>
 
     <div id="editModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content glow-card">
             <div class="modal-header">
                 <h3>Edit Pengeluaran</h3>
                 <button onclick="closeEditModal()" class="btn-close">×</button>
             </div>
             <div class="modal-body">
                 <label>Jumlah</label>
-                <input type="number" id="editAmount">
+                <div class="input-wrapper">
+                    <span class="prefix">Rp</span>
+                    <input type="number" id="editAmount">
+                </div>
                 <label>Kategori</label>
                 <select id="editCategory">
                     <option value="food">🍜 Makan</option>
@@ -197,34 +312,113 @@
                     <option value="bills">💳 Tagihan</option>
                     <option value="health">💊 Kesehatan</option>
                     <option value="fun">🎮 Hiburan</option>
-                    <option value="beauty">💄 Skincare & Make Up</option>
+                    <option value="beauty">💄 Beauty</option>
                     <option value="other">📦 Lainnya</option>
                 </select>
                 <label>Keterangan</label>
                 <input type="text" id="editNote">
+                <label>Tags</label>
+                <input type="text" id="editTags">
             </div>
             <div class="modal-footer">
-                <button onclick="deleteExpense()" class="btn-danger">Hapus</button>
+                <button onclick="deleteExpense()" class="btn-danger">
+                    <i class="fa-solid fa-trash"></i> Hapus
+                </button>
                 <button onclick="saveEdit()" class="btn-primary">Simpan</button>
             </div>
         </div>
     </div>
 
-    <div id="resetModal" class="modal">
-        <div class="modal-content">
+    <div id="goalModal" class="modal">
+        <div class="modal-content glow-card">
             <div class="modal-header">
-                <h3>⚠️ Reset Data</h3>
+                <h3>Add Savings Goal</h3>
+                <button onclick="closeGoalModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <label>Goal Name</label>
+                <input type="text" id="goalName" placeholder="iPhone 15 Pro">
+                <label>Target Amount</label>
+                <div class="input-wrapper">
+                    <span class="prefix">Rp</span>
+                    <input type="number" id="goalTarget" placeholder="15000000">
+                </div>
+                <label>Current Savings</label>
+                <div class="input-wrapper">
+                    <span class="prefix">Rp</span>
+                    <input type="number" id="goalCurrent" placeholder="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeGoalModal()" class="btn-secondary">Batal</button>
+                <button onclick="saveGoal()" class="btn-primary">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="resetModal" class="modal">
+        <div class="modal-content glow-card">
+            <div class="modal-header">
+                <h3>⚠️ Reset Semua Data</h3>
                 <button onclick="closeResetModal()" class="btn-close">×</button>
             </div>
             <div class="modal-body">
-                <p>Hapus semua data permanen?</p>
+                <p class="warning-text">
+                    <i class="fa-solid fa-triangle-exclamation shake"></i>
+                    Semua data akan dihapus permanen!
+                </p>
+                <p class="hint">Tidak bisa dibatalkan!</p>
             </div>
             <div class="modal-footer">
+                <button onclick="closeResetModal()" class="btn-secondary">Batal</button>
                 <button onclick="confirmReset()" class="btn-danger">Ya, Reset</button>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="pinModal" class="modal">
+        <div class="modal-content glow-card">
+            <div class="modal-header">
+                <h3>🔒 Security PIN</h3>
+                <button onclick="closePinModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <label>Set 4-Digit PIN</label>
+                <input type="password" id="pinInput" maxlength="4" placeholder="****">
+                <p class="hint">Leave empty to disable PIN</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closePinModal()" class="btn-secondary">Batal</button>
+                <button onclick="savePin()" class="btn-primary">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="statsModal" class="modal">
+        <div class="modal-content glow-card modal-large">
+            <div class="modal-header">
+                <h3>📊 Detailed Statistics</h3>
+                <button onclick="closeStatsModal()" class="btn-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="detailedStats"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install PWA Prompt -->
+    <div id="installPrompt" class="install-prompt" style="display:none">
+        <div class="install-content">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <div>
+                <strong>Install Duitku</strong>
+                <p>Install as app for better experience!</p>
+            </div>
+            <button onclick="installPWA()" class="btn-primary btn-small">Install</button>
+            <button onclick="dismissInstall()" class="btn-icon">×</button>
+        </div>
+    </div>
+
+    <script src="script-mega.js"></script>
 </body>
 </html>
